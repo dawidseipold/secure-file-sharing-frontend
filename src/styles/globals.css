@@ -121,3 +121,9 @@
         @apply bg-background text-foreground;
     }
 }
+
+@layer components {
+    .typography-base {
+        @apply font-sans text-slate-900 dark:text-slate-50 antialiased;
+    }
+}
