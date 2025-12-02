@@ -1,11 +1,11 @@
-export {H1} from "./H1.tsx";
-export {H2} from "./H2.tsx";
-export {H3} from "./H3.tsx";
-export {H4} from "./H4.tsx";
-export {Large} from "./Large.tsx";
-export {Small} from "./Small.tsx";
-export {Lead} from "./Lead.tsx";
-export {Muted} from "./Muted.tsx";
-export {P} from "./P.tsx";
-export {InlineCode} from "./InlineCode.tsx";
-export {Blockquote} from "./Blockquote.tsx";
+export { H1 } from "./h1.tsx"
+export { H2 } from "./h2.tsx"
+export { H3 } from "./h3.tsx"
+export { H4 } from "./h4.tsx"
+export { Large } from "./large.tsx"
+export { Small } from "./small.tsx"
+export { Lead } from "./lead.tsx"
+export { Muted } from "./muted.tsx"
+export { P } from "./p.tsx"
+export { InlineCode } from "./inline-code"
+export { Blockquote } from "./blockquote.tsx"
