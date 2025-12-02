@@ -117,9 +117,14 @@
     * {
         @apply border-border outline-ring/50;
     }
+
     body {
         @apply bg-background text-foreground;
     }
+}
+
+@utility glass-panel {
+    @apply bg-white/80 backdrop-blur-md;
 }
 
 @layer components {
