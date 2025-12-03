@@ -9,7 +9,7 @@ const cardIconVariants = tv({
     base: "flex items-center justify-center aspect-square w-max h-max p-2 rounded-2xl",
 })
 
-interface CardIconProps extends VariantProps<typeof cardIconVariants> {
+export interface CardIconProps extends VariantProps<typeof cardIconVariants> {
     className?: string
     color?: TailwindColor
     icon?: Extract<IconName, "camera" | "anchor">

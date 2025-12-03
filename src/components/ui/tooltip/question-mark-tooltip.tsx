@@ -5,23 +5,23 @@ import type { FC } from "react"
 import { Small } from "@/components/typography"
 import { cn } from "@/utils/styles.ts"
 
-const pageTooltipVariants = tv({
+const questionMarkTooltipVariants = tv({
     base: "",
 })
 
-interface PageTooltipProps extends VariantProps<typeof pageTooltipVariants> {
+interface PageTooltipProps extends VariantProps<typeof questionMarkTooltipVariants> {
     text: string
     className?: string
 }
 
-export const PageTooltip: FC<PageTooltipProps> = ({ text, className }) => {
+export const QuestionMarkTooltip: FC<PageTooltipProps> = ({ text, className }) => {
     return (
         <Tooltip>
             <TooltipTrigger asChild>
                 <CircleQuestionMark className={"size-4 text-muted-foreground"} />
             </TooltipTrigger>
 
-            <TooltipContent className={cn(pageTooltipVariants({}), className)}>
+            <TooltipContent className={cn(questionMarkTooltipVariants({}), className)}>
                 <Small className={"text-white"}>{text}</Small>
             </TooltipContent>
         </Tooltip>
