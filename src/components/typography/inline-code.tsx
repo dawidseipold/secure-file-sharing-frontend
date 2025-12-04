@@ -1,6 +1,6 @@
-import {tv} from "tailwind-variants";
-import {cn} from "@/utils/styles";
-import {type FC, type ReactNode} from "react";
+import { tv } from "tailwind-variants"
+import { cn } from "@/utils/styles"
+import { type FC, type ReactNode } from "react"
 
 const inlineCodeVariants = tv({
     base: cn(
@@ -10,20 +10,13 @@ const inlineCodeVariants = tv({
         "text-slate-900 dark:text-slate-50",
         "border border-slate-200/70 dark:border-slate-700",
     ),
-});
+})
 
 interface InlineCodeProps {
-    children: ReactNode;
-    className?: string;
+    children: ReactNode
+    className?: string
 }
 
-export const InlineCode: FC<InlineCodeProps> = ({
-                                                    children,
-                                                    className,
-                                                }) => {
-    return (
-        <code className={cn(inlineCodeVariants(), className)}>
-            {children}
-        </code>
-    );
-};
+export const InlineCode: FC<InlineCodeProps> = ({ children, className }) => {
+    return <code className={cn(inlineCodeVariants(), className)}>{children}</code>
+}

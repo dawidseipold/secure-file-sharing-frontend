@@ -1,16 +1,21 @@
-import { tv } from "tailwind-variants"
+import { tv, type VariantProps } from "tailwind-variants"
 import { cn } from "@/utils/styles"
 import { type FC, type ReactNode } from "react"
 
 const mutedVariants = tv({
-    base: cn("typography-base", "text-sm", "leading-relaxed", "text-slate-500 dark:text-slate-400"),
+    base: "typography-base text-sm leading-relaxed text-slate-500 dark:text-slate-400 transition-colors",
+    variants: {
+        hover: {
+            true: "hover:text-slate-700 dark:hover:text-slate-200",
+        },
+    },
 })
 
-interface MutedProps {
+interface MutedProps extends VariantProps<typeof mutedVariants> {
     children: ReactNode
     className?: string
 }
 
-export const Muted: FC<MutedProps> = ({ children, className }) => {
-    return <p className={cn(mutedVariants(), className)}>{children}</p>
+export const Muted: FC<MutedProps> = ({ children, className, hover }) => {
+    return <p className={cn(mutedVariants({ hover }), className)}>{children}</p>
 }

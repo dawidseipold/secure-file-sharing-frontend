@@ -6,7 +6,7 @@ import { MEGABYTES_MULTIPLIER } from "@/constants/files.ts"
 
 const dropzoneZoneVariants = tv({
     slots: {
-        root: "px-6",
+        root: "",
         box: "border-2 border-dashed border-border rounded-md p-8 flex flex-col items-center justify-center text-center cursor-pointer",
         iconWrapper: "mb-2 bg-muted rounded-full p-3",
         icon: "h-5 w-5 text-muted-foreground",
@@ -33,7 +33,7 @@ export const DropzoneZone: FC<DropzoneZoneProps> = ({
     handleFileSelect,
     ...variantProps
 }) => {
-    const { root, box, iconWrapper, icon, title, subtitle, browseLabel, fileInput } =
+    const { root, box, iconWrapper, icon, title, subtitle, fileInput } =
         dropzoneZoneVariants(variantProps)
 
     return (
@@ -48,20 +48,8 @@ export const DropzoneZone: FC<DropzoneZoneProps> = ({
                     <Upload className={cn(icon())} />
                 </div>
 
-                <p className={cn(title())}>Upload a project image</p>
-                <p className={cn(subtitle())}>
-                    <span>or,</span>
-
-                    <label
-                        htmlFor="fileUpload"
-                        className={cn(browseLabel())}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        click to browse
-                    </label>
-
-                    <span>({MEGABYTES_MULTIPLIER}MB max)</span>
-                </p>
+                <p className={cn(title())}>Drop files here or click to upload</p>
+                <p className={cn(subtitle())}>Max {MEGABYTES_MULTIPLIER}MB per transfer</p>
 
                 <input
                     type="file"

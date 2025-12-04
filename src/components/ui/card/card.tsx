@@ -1,7 +1,7 @@
-import type { FC, ReactNode } from "react"
+import { type FC, type ReactNode } from "react"
 import { tv } from "tailwind-variants"
 import { cn } from "@/utils/styles.ts"
-import { CardIcon } from "@/components/ui/card/card-icon.tsx"
+import { CardIcon, type CardIconProps } from "@/components/ui/card/card-icon.tsx"
 import { CardTitle } from "@/components/ui/card/card-title.tsx"
 
 const cardVariants = tv({
@@ -10,18 +10,22 @@ const cardVariants = tv({
 
 interface CardProps {
     children?: ReactNode
+    title?: string
+    icon?: Pick<CardIconProps, "icon" | "color">
     className?: string
 }
 
-export const Card: FC<CardProps> = ({ children, className }) => {
+export const Card: FC<CardProps> = ({ children, title, icon, className }) => {
     return (
         <div className={cn(cardVariants({}), className)}>
-            <header className={"flex items-center gap-4"}>
-                <CardIcon />
-                <CardTitle text={"Upload"} />
-            </header>
+            {(title || icon) && (
+                <header className="flex items-center gap-4">
+                    {icon && <CardIcon icon={icon.icon} color={icon.color} />}
+                    {title && <CardTitle text={title} />}
+                </header>
+            )}
 
-            <main>{children}</main>
+            {children && <main>{children}</main>}
 
             <footer></footer>
         </div>

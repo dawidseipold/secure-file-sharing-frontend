@@ -6,11 +6,11 @@ export type ActionsLayoutState = {
     tooltip: string
 }
 
-type ActionsLayoutStore = ActionsLayoutState & {
+type DashboardModulesLayoutStore = ActionsLayoutState & {
     setLayout: (data: Partial<ActionsLayoutState>) => void
 }
 
-export const useActionsLayoutStore = create<ActionsLayoutStore>((set) => ({
+export const useDashboardModulesLayoutStore = create<DashboardModulesLayoutStore>((set) => ({
     title: "Title",
     subtitle: "Subtitle",
     tooltip: "Tooltip",
@@ -22,6 +22,6 @@ export const useActionsLayoutStore = create<ActionsLayoutStore>((set) => ({
     },
 }))
 
-export function setActionsLayout(data: Partial<ActionsLayoutState>): void {
-    useActionsLayoutStore.getState().setLayout(data)
+export function setDashboardModulesLayout(data: Partial<ActionsLayoutState>): void {
+    useDashboardModulesLayoutStore.getState().setLayout(data)
 }
