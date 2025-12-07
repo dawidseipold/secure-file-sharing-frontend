@@ -6,8 +6,12 @@ import { useState } from "react"
 import { MultiSelectCombobox } from "@/components/ui/multiselect-combobox"
 import { Textarea } from "@/components/ui/textarea"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
-import { Lock } from "lucide-react"
+import { Loader, Lock } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { getKey, uploadFile } from "@/utils/api/endpoints.ts"
+import { useMutation } from "@tanstack/react-query"
+import { useIdentity } from "@/hooks/useIdentity.ts"
+import { encryptFileForMultipleRecipients } from "@/utils/crypto/hybrid.ts"
 
 const EXPIRATION_OPTIONS = {
     "1_hour": "1 Hour",
@@ -18,16 +22,62 @@ const EXPIRATION_OPTIONS = {
     never: "Never",
 }
 
-const SEND_AS_OPTIONS = {
-    primary_key_placeholder: "Primary Key (Placeholder)",
-    secondary_key_placeholder: "Secondary Key (Placeholder)",
-}
+type RecipientOption = { value: string; label: string }
 
 export const SendFileForm = () => {
-    const [existingRecipients] = useState([
-        { value: "550e8400-e29b-41d4-a716-446655440000", label: "John Doe" },
-        { value: "6ba7b810-9dad-11d1-80b4-00c04fd430c8", label: "Jane Smith" },
-    ])
+    const { userId } = useIdentity()
+    const [existingRecipients] = useState<RecipientOption[]>(() => {
+        const initialRecipients: RecipientOption[] = [
+            { value: "c7f8ee28-894f-4956-8f52-325e33a6f4fd", label: "Test" },
+        ]
+        if (userId) {
+            initialRecipients.unshift({ value: userId, label: "Me (Self-Test)" })
+        }
+        return initialRecipients
+    })
+
+    const uploadMutation = useMutation({
+        mutationFn: async (values: SendFileFormValues) => {
+            if (!userId) throw new Error("You need to create your identity before sending a file")
+            if (values.files.length === 0) throw new Error("Select at least one file")
+            if (values.recipients.length === 0) throw new Error("Select at least one recipient")
+
+            const recipientKeys = await Promise.all(
+                values.recipients.map(async (id) => {
+                    try {
+                        const response = await getKey(id)
+                        return { userId: id, publicKeyPEM: response.key }
+                    } catch (error) {
+                        console.log(error)
+                        throw new Error(`Recipient with ID: ${id} doesn't exist`)
+                    }
+                }),
+            )
+
+            const { encryptedBlob, metadata } = await encryptFileForMultipleRecipients(
+                values.files[0],
+                recipientKeys,
+                userId,
+                values.expiration,
+                values.note,
+            )
+
+            const formData = new FormData()
+            formData.append("file", encryptedBlob)
+            formData.append("metadata", JSON.stringify(metadata))
+
+            const response = await uploadFile(formData)
+
+            return response.file_id
+        },
+        onSuccess: (fileId) => {
+            console.log("Upload success! File ID: ", fileId)
+        },
+        onError: (error) => {
+            console.error("Upload error: ", error)
+            alert("Error occurred: " + (error as Error).message)
+        },
+    })
 
     const defaultValues: SendFileFormValues = {
         recipients: [],
@@ -43,7 +93,7 @@ export const SendFileForm = () => {
             onSubmit: sendFileFormSchema,
         },
         onSubmit: async ({ value }) => {
-            console.log("success", value)
+            uploadMutation.mutate(value)
         },
     })
 
@@ -144,11 +194,13 @@ export const SendFileForm = () => {
                                             )
                                         }
                                     >
-                                        {Object.entries(SEND_AS_OPTIONS).map(([value, label]) => (
-                                            <NativeSelectOption key={value} value={value}>
-                                                {label}
-                                            </NativeSelectOption>
-                                        ))}
+                                        {existingRecipients.map(({ value, label }) => {
+                                            return (
+                                                <NativeSelectOption key={value} value={value}>
+                                                    {label}
+                                                </NativeSelectOption>
+                                            )
+                                        })}
                                     </NativeSelect>
                                     {isInvalid && <FieldError errors={field.state.meta.errors} />}
                                 </Field>
@@ -176,9 +228,13 @@ export const SendFileForm = () => {
                     }}
                 />
 
-                <Button type="submit">
-                    <Lock />
-                    Encrypt & Send
+                <Button type="submit" disabled={uploadMutation.isPending}>
+                    <Lock className="mr-2 h-4 w-4" />
+                    {uploadMutation.isPending ? (
+                        <Loader className="animate-spin" />
+                    ) : (
+                        "Encrypt & Send"
+                    )}
                 </Button>
             </FieldGroup>
         </form>

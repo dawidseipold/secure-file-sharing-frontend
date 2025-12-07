@@ -1,19 +1,19 @@
 export interface PublishResponse {
-    user_id: string;
+    user_id: string
 }
 
 export interface KeyResponse {
-    key: string;
+    key: string
 }
 
 export interface UploadResponse {
-    key: string;
+    file_id: string
 }
 
 export interface FileResponse {
-    key: string;
+    file_content: string
 }
 
 export interface ErrorResponse {
-    error: string;
+    error: string
 }
