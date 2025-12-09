@@ -48,7 +48,7 @@ jednego pliku do wielu odbiorców.
 | **Hybrydowe szyfrowanie (RSA+AES)** |   ✅    | Web Crypto API (Frontend)                              |
 | **Generowanie kluczy RSA**          |   ✅    | RSA-OAEP 4096-bit                                      |
 | **Zapis klucza publicznego (PEM)**  |   ✅    | Endpoint `POST /users`, baza SurrealDB                 |
-| **Obsługa plików > 50MB**           |   ✅    | Limit 20MB (skonfigurowalny w `axum`), strumieniowanie |
+| **Obsługa plików > 50MB**           |   ✅    | Limit 100MB (skonfigurowalny w `axum`), strumieniowanie |
 | **Backend API**                     |   ✅    | Rust / Axum (REST API)                                 |
 | **Baza Danych**                     |   ✅    | SurrealDB (przechowuje klucze i metadane)              |
 | **Weryfikacja integralności**       |   ✅    | Zapewniona przez AES-GCM (Authenticated Encryption)    |
