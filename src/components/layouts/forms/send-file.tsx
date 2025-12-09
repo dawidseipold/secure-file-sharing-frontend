@@ -26,9 +26,11 @@ type RecipientOption = { value: string; label: string }
 
 export const SendFileForm = () => {
     const { userId } = useIdentity()
+    const [uploadProgress, setUploadProgress] = useState(0)
+
     const [existingRecipients] = useState<RecipientOption[]>(() => {
         const initialRecipients: RecipientOption[] = [
-            { value: "c7f8ee28-894f-4956-8f52-325e33a6f4fd", label: "Test" },
+            { value: "592b461a-f9ec-4480-8585-9b9fcd2a6849", label: "Test" },
         ]
         if (userId) {
             initialRecipients.unshift({ value: userId, label: "Me (Self-Test)" })
@@ -38,6 +40,8 @@ export const SendFileForm = () => {
 
     const uploadMutation = useMutation({
         mutationFn: async (values: SendFileFormValues) => {
+            setUploadProgress(0)
+
             if (!userId) throw new Error("You need to create your identity before sending a file")
             if (values.files.length === 0) throw new Error("Select at least one file")
             if (values.recipients.length === 0) throw new Error("Select at least one recipient")
@@ -66,16 +70,16 @@ export const SendFileForm = () => {
             formData.append("file", encryptedBlob)
             formData.append("metadata", JSON.stringify(metadata))
 
-            const response = await uploadFile(formData)
+            const response = await uploadFile(formData, (percent) => {
+                setUploadProgress(percent)
+            })
 
             return response.file_id
-        },
-        onSuccess: (fileId) => {
-            console.log("Upload success! File ID: ", fileId)
         },
         onError: (error) => {
             console.error("Upload error: ", error)
             alert("Error occurred: " + (error as Error).message)
+            setUploadProgress(0)
         },
     })
 
@@ -92,8 +96,14 @@ export const SendFileForm = () => {
         validators: {
             onSubmit: sendFileFormSchema,
         },
-        onSubmit: async ({ value }) => {
-            uploadMutation.mutate(value)
+        onSubmit: async ({ value, formApi }) => {
+            uploadMutation.mutate(value, {
+                onSuccess: (fileId) => {
+                    console.log("Upload success! File ID: ", fileId)
+                    formApi.reset()
+                    setUploadProgress(0)
+                },
+            })
         },
     })
 
@@ -130,13 +140,22 @@ export const SendFileForm = () => {
                 <form.Field
                     name="files"
                     children={(field) => {
+                        const currentFile = field.state.value[0]
+                        const showProgress =
+                            uploadMutation.isPending && currentFile && uploadProgress > 0
+                        const progressMap = showProgress
+                            ? { [currentFile.name]: uploadProgress }
+                            : {}
+
                         const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+
                         return (
                             <Field>
                                 <FieldLabel>Files</FieldLabel>
                                 <Dropzone
                                     value={field.state.value}
                                     onChange={(files) => field.handleChange(files)}
+                                    progressMap={progressMap}
                                 />
                                 <FieldDescription>Add the files you want to send.</FieldDescription>
                                 {isInvalid && <FieldError errors={field.state.meta.errors} />}

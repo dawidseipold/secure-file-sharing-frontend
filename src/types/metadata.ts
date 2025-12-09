@@ -10,4 +10,13 @@ export interface MetadataDto {
     expiration: string
     note_iv: string | null
     encrypted_note: string | null
+    filename: string
+    mime_type: string
+}
+
+export interface FileRecord {
+    id: { tb: string; id: { String: string } }
+    sender_id: string
+    expiration: string
+    created_at: string
 }

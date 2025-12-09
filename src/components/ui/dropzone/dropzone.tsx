@@ -1,6 +1,6 @@
 "use client"
 
-import { type FC, useRef, useState } from "react"
+import { type FC, useRef } from "react"
 import { cn } from "@/utils/styles"
 import { DropzoneZone } from "@/components/ui/dropzone/dropzone-zone.tsx"
 import { DropzoneList } from "@/components/ui/dropzone/dropzone-list.tsx"
@@ -11,39 +11,25 @@ export interface DropzoneProps {
     error?: string
     name?: string
     className?: string
+    progressMap?: Record<string, number>
 }
 
-export const Dropzone: FC<DropzoneProps> = ({ value, onChange, error, className }) => {
+export const Dropzone: FC<DropzoneProps> = ({
+    value,
+    onChange,
+    error,
+    className,
+    progressMap = {},
+}) => {
     const fileInputRef = useRef<HTMLInputElement>(null)
-    const [fileProgresses, setFileProgresses] = useState<Record<string, number>>({})
-
-    const simulateProgress = (files: File[]) => {
-        files.forEach((file) => {
-            let progress = 0
-
-            const interval = setInterval(() => {
-                progress += Math.random() * 10
-
-                setFileProgresses((prev) => ({
-                    ...prev,
-                    [file.name]: Math.min(progress, 100),
-                }))
-
-                if (progress >= 100) {
-                    clearInterval(interval)
-                }
-            }, 300)
-        })
-    }
 
     const handleFileSelect = (files: FileList | null) => {
         if (!files) return
 
         const newFiles = Array.from(files)
-        const nextFiles = [...value, ...newFiles]
+        // const nextFiles = [...value, ...newFiles]
 
-        onChange(nextFiles)
-        simulateProgress(newFiles)
+        onChange(newFiles)
     }
 
     const handleBoxClick = () => {
@@ -62,12 +48,6 @@ export const Dropzone: FC<DropzoneProps> = ({ value, onChange, error, className 
     const removeFile = (filename: string) => {
         const nextFiles = value.filter((file) => file.name !== filename)
         onChange(nextFiles)
-
-        setFileProgresses((prev) => {
-            const next = { ...prev }
-            delete next[filename]
-            return next
-        })
     }
 
     return (
@@ -82,7 +62,7 @@ export const Dropzone: FC<DropzoneProps> = ({ value, onChange, error, className 
 
             <DropzoneList
                 uploadedFiles={value}
-                fileProgresses={fileProgresses}
+                fileProgresses={progressMap}
                 removeFile={removeFile}
             />
 

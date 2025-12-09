@@ -1,73 +1,86 @@
-# React + TypeScript + Vite
+# Secure File Sharing (Rust + React + Hybrid Encryption)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplikacja do bezpiecznej, szyfrowanej wymiany plików (End-to-End Encryption) zrealizowana w ramach projektu
+inżynierskiego. Projekt wykorzystuje nowoczesne technologie gwarantujące wysoką wydajność, bezpieczeństwo typów i
+skalowalność.
 
-Currently, two official plugins are available:
+## Technologie
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+W projekcie świadomie zastąpiono sugerowany stack (Python/Flask) nowocześniejszymi odpowiednikami:
 
-## React Compiler
+* **Backend:** **Rust** + **Axum** (zamiast Flask).
+    * *Dlaczego?* Rust gwarantuje bezpieczeństwo pamięci, wydajność (brak Garbage Collectora) i bezpieczną
+      współbieżność, co jest kluczowe przy operacjach kryptograficznych i obsłudze plików.
+* **Baza Danych:** **SurrealDB (Embedded RocksDB)** (zamiast SQLite).
+    * *Dlaczego?* Nowoczesna baza dokumentowa, idealna do przechowywania metadanych JSON i list odbiorców. Działa w
+      trybie wbudowanym (brak potrzeby instalacji serwera).
+* **Frontend:** **React** + **TanStack Query** + **TypeScript** (zamiast HTML/Jinja2).
+    * *Dlaczego?* Pozwala na wykonywanie operacji kryptograficznych (Web Crypto API) po stronie klienta (Client-Side
+      Encryption) bez blokowania interfejsu.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Kryptografia (Hybrid Encryption)
 
-## Expanding the ESLint configuration
+Aplikacja realizuje model **Szyfrowania Kopertowego (Envelope Encryption)**, co pozwala na bezpieczne przesyłanie
+jednego pliku do wielu odbiorców.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Jak to działa? (Algorytm)
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+1. **Generowanie Tożsamości (RSA-4096):**
+    * Użytkownik generuje w przeglądarce parę kluczy RSA (4096-bit).
+    * Klucz prywatny jest zapisywany w `localStorage` (nigdy nie opuszcza urządzenia).
+    * Klucz publiczny jest wysyłany na serwer.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+2. **Wysyłanie Pliku (Encryption):**
+    * Nadawca generuje jednorazowy, symetryczny klucz sesji **AES-256-GCM**.
+    * Plik jest szyfrowany kluczem AES (zapewnia to wydajność dla dużych plików).
+    * Klucz AES jest szyfrowany asymetrycznie (**RSA-OAEP**) osobno dla każdego odbiorcy.
+    * Na serwer trafia: Zaszyfrowany plik `.bin` + Metadane (lista zaszyfrowanych kluczy AES dla odbiorców).
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+3. **Odbieranie Pliku (Decryption):**
+    * Odbiorca pobiera zaszyfrowany plik i metadane.
+    * Odbiorca używa swojego Klucza Prywatnego RSA, aby odszyfrować klucz AES z metadanych.
+    * Odzyskanym kluczem AES odszyfrowuje plik w pamięci przeglądarki.
+
+### Spełnienie Wymagań (Checklist)
+
+| Wymóg                               | Status | Implementacja                                          |
+|:------------------------------------|:------:|:-------------------------------------------------------|
+| **Hybrydowe szyfrowanie (RSA+AES)** |   ✅    | Web Crypto API (Frontend)                              |
+| **Generowanie kluczy RSA**          |   ✅    | RSA-OAEP 4096-bit                                      |
+| **Zapis klucza publicznego (PEM)**  |   ✅    | Endpoint `POST /users`, baza SurrealDB                 |
+| **Obsługa plików > 50MB**           |   ✅    | Limit 20MB (skonfigurowalny w `axum`), strumieniowanie |
+| **Backend API**                     |   ✅    | Rust / Axum (REST API)                                 |
+| **Baza Danych**                     |   ✅    | SurrealDB (przechowuje klucze i metadane)              |
+| **Weryfikacja integralności**       |   ✅    | Zapewniona przez AES-GCM (Authenticated Encryption)    |
+| **Frontend UI**                     |   ✅    | React (Upload form, Lista plików, Deszyfrowanie)       |
+| **Automatyczne usuwanie (24h)**     |   ✅    | Background Cleaner w Rust (`tokio::spawn`)             |
+| **Historia transakcji**             |   ✅    | Widok `Secure Download` (lista plików usera)           |
+
+## Instalacja i Uruchomienie
+
+### Backend (Rust)
+
+```bash
+cd backend
+# Baza danych zostanie utworzona automatycznie w folderze projektu
+cargo run
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Serwer nasłuchuje na porcie `3000`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Frontend (React)
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+cd frontend
+npm install
+npm run dev
 ```
+
+Aplikacja dostępna pod `http://localhost:5173`.
+
+## ⚠Uwagi Bezpieczeństwa (Proof of Concept)
+
+* System tożsamości oparty jest na `localStorage` i UUID. W wersji produkcyjnej należałoby dodać autentykację (np.
+  OIDC).
+* Klucze prywatne są przechowywane w pamięci przeglądarki (exportable), co jest akceptowalne dla POC, ale wymagałoby
+  zabezpieczenia hasłem w produkcji.

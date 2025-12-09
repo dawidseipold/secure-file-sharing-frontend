@@ -5,7 +5,7 @@ import { DropzoneItem } from "@/components/ui/dropzone/dropzone-item"
 
 const dropzoneListVariants = tv({
     slots: {
-        root: "px-6 pb-5 space-y-3 mt-4",
+        root: "space-y-3 my-4",
     },
 })
 

@@ -4,25 +4,26 @@ import {
     FileArchive,
     FileAudio,
     FileCode,
+    FileImage,
     FileSpreadsheet,
     FileText,
     FileVideo,
     Trash2,
 } from "lucide-react"
-import { type FC, useEffect } from "react"
+import { type FC } from "react"
 import { tv, type VariantProps } from "tailwind-variants"
 import { cn } from "@/utils/styles"
 
 const dropzoneItemVariants = tv({
     slots: {
         root: "border border-border rounded-lg p-2 flex flex-col",
-        mainRow: "flex items-center gap-2",
+        mainRow: "flex items-center gap-4",
         previewWrapper:
-            "w-18 h-14 bg-muted rounded-sm flex items-center justify-center self-start row-span-2 overflow-hidden",
+            "w-16 min-w-16 h-16 bg-muted rounded-sm flex items-center justify-center self-start row-span-2 overflow-hidden",
         previewImage: "w-full h-full object-cover",
         content: "flex-1 pr-1",
-        headerRow: "flex justify-between items-center",
-        fileMeta: "flex items-center gap-2",
+        headerRow: "flex gap-2 justify-between items-center",
+        fileMeta: "flex items-center gap-2 w-full justify-between",
         fileName: "text-sm text-foreground truncate max-w-[250px]",
         fileSize: "text-sm text-muted-foreground whitespace-nowrap",
         progressRow: "flex items-center gap-2",
@@ -41,6 +42,7 @@ interface DropzoneItemProps extends VariantProps<typeof dropzoneItemVariants> {
 const renderFileIcon = (mimeType: string) => {
     const iconClass = "h-8 w-8 text-muted-foreground"
 
+    if (mimeType.startsWith("image/")) return <FileImage className={iconClass} />
     if (mimeType.startsWith("video/")) return <FileVideo className={iconClass} />
     if (mimeType.startsWith("audio/")) return <FileAudio className={iconClass} />
     if (mimeType.startsWith("text/")) return <FileText className={iconClass} />
@@ -61,21 +63,12 @@ const renderFileIcon = (mimeType: string) => {
 }
 
 export const DropzoneItem: FC<DropzoneItemProps> = ({ file, progress, onRemove }) => {
-    const imageUrl = file.type.startsWith("image/") ? URL.createObjectURL(file) : null
-
-    useEffect(() => {
-        return () => {
-            if (imageUrl) URL.revokeObjectURL(imageUrl)
-        }
-    }, [imageUrl])
-
     const safeProgress = progress || 0
 
     const {
         root,
         mainRow,
         previewWrapper,
-        previewImage,
         content,
         headerRow,
         fileMeta,
@@ -90,18 +83,15 @@ export const DropzoneItem: FC<DropzoneItemProps> = ({ file, progress, onRemove }
     return (
         <div className={cn(root())}>
             <div className={cn(mainRow())}>
-                <div className={cn(previewWrapper())}>
-                    {imageUrl ? (
-                        <img src={imageUrl} alt={file.name} className={cn(previewImage())} />
-                    ) : (
-                        renderFileIcon(file.type)
-                    )}
-                </div>
+                <div className={cn(previewWrapper())}>{renderFileIcon(file.type)}</div>
 
                 <div className={cn(content())}>
                     <div className={cn(headerRow())}>
                         <div className={cn(fileMeta())}>
-                            <span className={cn(fileName())}>{file.name}</span>
+                            <span className={cn(fileName())}>
+                                {file.name.slice(0, 20)}
+                                {file.name.length > 20 ? "..." : null}
+                            </span>
                             <span className={cn(fileSize())}>
                                 {Math.round(file.size / 1024)} KB
                             </span>
@@ -117,16 +107,18 @@ export const DropzoneItem: FC<DropzoneItemProps> = ({ file, progress, onRemove }
                         </Button>
                     </div>
 
-                    <div className={cn(progressRow())}>
-                        <div className={cn(progressTrack())}>
-                            <div
-                                className={cn(progressBar())}
-                                style={{ width: `${safeProgress}%` }}
-                            />
-                        </div>
+                    {progress > 0 && (
+                        <div className={cn(progressRow())}>
+                            <div className={cn(progressTrack())}>
+                                <div
+                                    className={cn(progressBar())}
+                                    style={{ width: `${safeProgress}%` }}
+                                />
+                            </div>
 
-                        <span className={cn(progressText())}>{Math.round(safeProgress)}%</span>
-                    </div>
+                            <span className={cn(progressText())}>{Math.round(safeProgress)}%</span>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

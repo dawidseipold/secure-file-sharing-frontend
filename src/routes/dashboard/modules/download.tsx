@@ -1,16 +1,16 @@
 import { createRoute } from "@tanstack/react-router"
-import { DashboardModulesSendPage } from "@/pages/dashboard/modules/send"
+import { DashboardModulesDownloadPage } from "@/pages/dashboard/modules/download"
 import { dashboardModulesLayoutRoute } from "@/routes/dashboard/modules"
 import { setDashboardModulesLayout } from "@/stores/dashboardModulesLayoutStore.ts"
 
-export const dashboardModulesSendRoute = createRoute({
+export const dashboardModulesDownloadRoute = createRoute({
     getParentRoute: () => dashboardModulesLayoutRoute,
-    path: "/send",
-    component: DashboardModulesSendPage,
+    path: "/download",
+    component: DashboardModulesDownloadPage,
     beforeLoad: () => {
         setDashboardModulesLayout({
-            title: "Secure transfer",
-            subtitle: "End-to-end encrypted file sharing.",
+            title: "Secure download",
+            subtitle: "Download your files.",
         })
     },
 })

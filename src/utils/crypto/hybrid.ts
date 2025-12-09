@@ -1,4 +1,8 @@
-import { arrayBufferToBase64, base64ToArrayBuffer, stringToArrayBuffer, } from "@/utils/crypto/conversion.ts"
+import {
+    arrayBufferToBase64,
+    base64ToArrayBuffer,
+    stringToArrayBuffer,
+} from "@/utils/crypto/conversion.ts"
 import { importPublicKeyFromPEM } from "@/utils/crypto/keys.ts"
 import type { MetadataDto } from "@/types/metadata.ts"
 
@@ -121,11 +125,73 @@ export const encryptFileForMultipleRecipients = async (
         expiration: expiration,
         note_iv: noteIvBase64,
         encrypted_note: encryptedNoteBase64,
+        filename: file.name,
+        mime_type: file.type,
     }
 
     return {
         encryptedBlob: new Blob([encryptedFileBuffer]),
         metadata: metadata,
+    }
+}
+
+export const decryptFilePackage = async (
+    encryptedFileBase64: string,
+    metadata: MetadataDto,
+    myPrivateKey: CryptoKey,
+    myUserId: string,
+) => {
+    const recipientEntry = metadata.recipients.find((r) => r.user_id === myUserId)
+
+    if (!recipientEntry) {
+        throw new Error("You are not on the list of recipients for this file!")
+    }
+
+    const encryptedKeyBuffer = base64ToArrayBuffer(recipientEntry.encrypted_key)
+    const rawAesKey = await window.crypto.subtle.decrypt(
+        {
+            name: "RSA-OAEP",
+        },
+        myPrivateKey,
+        encryptedKeyBuffer,
+    )
+
+    const aesKey = await importAesKey(rawAesKey)
+    const fileIv = base64ToArrayBuffer(metadata.file_iv)
+    const encryptedFileBuffer = base64ToArrayBuffer(encryptedFileBase64)
+
+    const decryptedFileBuffer = await window.crypto.subtle.decrypt(
+        { name: "AES-GCM", iv: fileIv },
+        aesKey,
+        encryptedFileBuffer,
+    )
+
+    let decryptedNote: string | null = null
+
+    if (metadata.encrypted_note && metadata.note_iv) {
+        try {
+            const noteIv = base64ToArrayBuffer(metadata.note_iv)
+            const encryptedNoteBuffer = base64ToArrayBuffer(metadata.encrypted_note)
+
+            const decryptedNoteBuffer = await window.crypto.subtle.decrypt(
+                {
+                    name: "AES-GCM",
+                    iv: noteIv,
+                },
+                aesKey,
+                encryptedNoteBuffer,
+            )
+
+            decryptedNote = new TextDecoder().decode(decryptedNoteBuffer)
+        } catch (e) {
+            console.error("Error while decrypting the note: ", e)
+            decryptedNote = "[Error while decrypting the note]"
+        }
+    }
+
+    return {
+        blob: new Blob([decryptedFileBuffer], { type: metadata.mime_type }),
+        note: decryptedNote,
     }
 }
 
